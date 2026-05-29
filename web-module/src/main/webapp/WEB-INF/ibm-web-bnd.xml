@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-bnd xmlns="http://websphere.ibm.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://websphere.ibm.com/xml/ns/javaee
+         http://websphere.ibm.com/xml/ns/javaee/ibm-web-bnd_1_0.xsd"
+         version="1.0">
+
+    <!--
+    ============================================================
+    IBM WebSphere Web Binding File (ibm-web-bnd.xml)
+    ============================================================
+    Maps:
+      - Security roles → WebSphere user registry groups
+      - resource-ref logical names → Admin Console JNDI names
+      - virtual host assignment
+
+    These bindings can also be configured via:
+      Admin Console > Enterprise Applications > your_app >
+      Map security roles / Resource references
+    ============================================================
+    -->
+
+    <!-- Virtual host — configured in Admin Console: Environment > Virtual Hosts -->
+    <virtual-host name="default_host"/>
+
+    <!-- Map security roles to WebSphere user registry groups -->
+    <security-role name="AdminRole">
+        <!-- Groups from WebSphere LDAP / Federated Repository -->
+        <group name="HR_Administrators"/>
+        <group name="APP_Admins"/>
+    </security-role>
+
+    <security-role name="UserRole">
+        <group name="HR_Users"/>
+        <special-subject type="ALL_AUTHENTICATED_USERS"/>
+    </security-role>
+
+    <!-- Map web.xml resource-ref → WebSphere Admin Console JNDI DataSource -->
+    <resource-ref name="jdbc/PostgresDS"
+                  binding-name="jdbc/EmployeePostgresDS"/>
+
+</web-bnd>

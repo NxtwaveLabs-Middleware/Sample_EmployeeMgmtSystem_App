@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- =====================================================================
+         Enterprise EAR Application - WebSphere Best Practices
+         Demonstrates 10+ years of WebSphere expertise:
+           - EJB 3.x Session Beans (Stateless, Stateful, Singleton)
+           - JPA 2.x with PostgreSQL via WebSphere DataSource (JNDI)
+           - JAX-RS RESTful Web Services
+           - JMS Message-Driven Beans (MDB)
+           - CDI Dependency Injection
+           - WebSphere-specific JNDI, transaction management, security
+           - IBM Extension Deployment Descriptors
+         ===================================================================== -->
+
+    <groupId>com.ibm.websphere.sample</groupId>
+    <artifactId>websphere-ear-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>WebSphere EAR Sample - Parent</name>
+
+    <modules>
+        <module>shared-lib</module>
+        <module>ejb-module</module>
+        <module>web-module</module>
+        <module>ear-project</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Java EE / Jakarta EE versions aligned with WebSphere Traditional 9.x -->
+        <javaee.version>8.0</javaee.version>
+        <ejb.version>3.2</ejb.version>
+        <jpa.version>2.2</jpa.version>
+        <jaxrs.version>2.1</jaxrs.version>
+        <cdi.version>2.0</cdi.version>
+
+        <!-- PostgreSQL JDBC -->
+        <postgresql.version>42.7.3</postgresql.version>
+
+        <!-- Logging -->
+        <slf4j.version>1.7.36</slf4j.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Java EE 8 API (provided by WebSphere at runtime) -->
+            <dependency>
+                <groupId>javax</groupId>
+                <artifactId>javaee-api</artifactId>
+                <version>${javaee.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- PostgreSQL JDBC Driver (bundled in shared-lib or placed in WAS lib) -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+
+            <!-- SLF4J / Java Util Logging bridge -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jdk14</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>com.ibm.websphere.sample</groupId>
+                <artifactId>shared-lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ibm.websphere.sample</groupId>
+                <artifactId>ejb-module</artifactId>
+                <version>${project.version}</version>
+                <type>ejb</type>
+            </dependency>
+            <dependency>
+                <groupId>com.ibm.websphere.sample</groupId>
+                <artifactId>web-module</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.12.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ejb-plugin</artifactId>
+                    <version>3.2.1</version>
+                    <configuration>
+                        <ejbVersion>3.2</ejbVersion>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>3.4.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-ear-plugin</artifactId>
+                    <version>3.3.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar-bnd xmlns="http://websphere.ibm.com/xml/ns/javaee"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://websphere.ibm.com/xml/ns/javaee
+             http://websphere.ibm.com/xml/ns/javaee/ibm-ejb-jar-bnd_1_0.xsd"
+             version="1.0">
+
+    <!--
+    ============================================================
+    IBM WebSphere EJB Binding File (ibm-ejb-jar-bnd.xml)
+    ============================================================
+
+    This file maps:
+      - EJB JNDI bindings (how clients look up beans)
+      - Resource references → actual WebSphere JNDI resources
+      - Security role → WebSphere user/group mappings
+      - Activation specifications for MDBs
+
+    WebSphere Admin Console equivalents:
+      Enterprise Applications > your_app > EJB JNDI bindings
+      Enterprise Applications > your_app > Resource references
+      Enterprise Applications > your_app > Security role to user/group mapping
+    ============================================================
+    -->
+
+    <session name="EmployeeServiceBean">
+        <!-- Global JNDI name for remote lookup via InitialContext -->
+        <interface class="com.ibm.websphere.sample.ejb.EmployeeServiceRemote"
+                   binding-name="ejb/EmployeeServiceBean"/>
+        <interface class="com.ibm.websphere.sample.ejb.EmployeeServiceLocal"
+                   binding-name="ejblocal:ejb/EmployeeServiceLocal"/>
+
+        <!-- Map resource-ref logical name → WebSphere Admin Console JNDI name -->
+        <resource-ref name="jdbc/PostgresDS"
+                      binding-name="jdbc/EmployeePostgresDS"/>
+        <resource-ref name="jms/EmployeeQCF"
+                      binding-name="jms/EmployeeSIBConnectionFactory"/>
+        <resource-env-ref name="jms/EmployeeQueue"
+                          binding-name="jms/EmployeeSIBQueue"/>
+    </session>
+
+    <session name="ApplicationStartupBean">
+        <interface class="com.ibm.websphere.sample.ejb.ApplicationStartupBean"
+                   binding-name="ejblocal:ejb/ApplicationStartupBean"/>
+    </session>
+
+    <message-driven name="EmployeeEventMDB">
+        <!--
+            Activation Specification JNDI name — configured in WAS Admin Console:
+              Resources > JMS > Activation Specifications
+            The activation spec connects the MDB to the SIBus destination.
+        -->
+        <jca-adapter activation-spec-binding-name="jms/EmployeeActivationSpec"
+                     destination-binding-name="jms/EmployeeSIBQueue"/>
+    </message-driven>
+
+</ejb-jar-bnd>

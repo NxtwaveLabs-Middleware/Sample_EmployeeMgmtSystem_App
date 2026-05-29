@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ejb-jar xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         http://xmlns.jcp.org/xml/ns/javaee/ejb-jar_3_2.xsd"
+         version="3.2">
+
+    <display-name>Employee EJB Module</display-name>
+    <description>
+        WebSphere EJB module demonstrating enterprise best practices:
+        Session Beans, MDB, JPA, JMS, CMT, Security, Timers.
+    </description>
+
+    <enterprise-beans>
+
+        <!-- ================================================================
+             Stateless Session Bean — Employee Service
+             ================================================================ -->
+        <session>
+            <display-name>EmployeeServiceBean</display-name>
+            <ejb-name>EmployeeServiceBean</ejb-name>
+            <business-local>com.ibm.websphere.sample.ejb.EmployeeServiceLocal</business-local>
+            <business-remote>com.ibm.websphere.sample.ejb.EmployeeServiceRemote</business-remote>
+            <ejb-class>com.ibm.websphere.sample.ejb.EmployeeServiceBean</ejb-class>
+            <session-type>Stateless</session-type>
+            <transaction-type>Container</transaction-type>
+
+            <!-- JDBC DataSource resource reference -->
+            <resource-ref>
+                <description>PostgreSQL DataSource (XA-capable)</description>
+                <res-ref-name>jdbc/PostgresDS</res-ref-name>
+                <res-type>javax.sql.DataSource</res-type>
+                <res-auth>Container</res-auth>
+                <res-sharing-scope>Shareable</res-sharing-scope>
+                <!-- Mapped to global JNDI in WebSphere binding file -->
+            </resource-ref>
+
+            <!-- JMS ConnectionFactory resource reference -->
+            <resource-ref>
+                <description>JMS Connection Factory for Employee Queue</description>
+                <res-ref-name>jms/EmployeeQCF</res-ref-name>
+                <res-type>javax.jms.ConnectionFactory</res-type>
+                <res-auth>Container</res-auth>
+                <res-sharing-scope>Unshareable</res-sharing-scope>
+            </resource-ref>
+
+            <!-- JMS Queue resource-env-ref -->
+            <resource-env-ref>
+                <resource-env-ref-name>jms/EmployeeQueue</resource-env-ref-name>
+                <resource-env-ref-type>javax.jms.Queue</resource-env-ref-type>
+            </resource-env-ref>
+
+            <!-- EJB Security: restrict deactivateDepartment to ADMIN role -->
+            <security-role-ref>
+                <role-name>admin</role-name>
+                <role-link>AdminRole</role-link>
+            </security-role-ref>
+        </session>
+
+        <!-- ================================================================
+             Singleton Bean — Application Startup
+             ================================================================ -->
+        <session>
+            <display-name>ApplicationStartupBean</display-name>
+            <ejb-name>ApplicationStartupBean</ejb-name>
+            <ejb-class>com.ibm.websphere.sample.ejb.ApplicationStartupBean</ejb-class>
+            <session-type>Singleton</session-type>
+            <init-on-startup>true</init-on-startup>
+            <transaction-type>Container</transaction-type>
+            <concurrency-management-type>Container</concurrency-management-type>
+        </session>
+
+        <!-- ================================================================
+             Message-Driven Bean — Employee Event Processor
+             ================================================================ -->
+        <message-driven>
+            <display-name>EmployeeEventMDB</display-name>
+            <ejb-name>EmployeeEventMDB</ejb-name>
+            <ejb-class>com.ibm.websphere.sample.ejb.EmployeeEventMDB</ejb-class>
+            <transaction-type>Container</transaction-type>
+            <message-destination-type>javax.jms.Queue</message-destination-type>
+            <activation-config>
+                <activation-config-property>
+                    <activation-config-property-name>destinationType</activation-config-property-name>
+                    <activation-config-property-value>javax.jms.Queue</activation-config-property-value>
+                </activation-config-property>
+                <activation-config-property>
+                    <activation-config-property-name>destination</activation-config-property-name>
+                    <activation-config-property-value>jms/EmployeeQueue</activation-config-property-value>
+                </activation-config-property>
+            </activation-config>
+        </message-driven>
+
+    </enterprise-beans>
+
+    <!-- ================================================================
+         Container-Managed Transaction Attributes
+         ================================================================ -->
+    <assembly-descriptor>
+
+        <!-- Security Role declarations -->
+        <security-role>
+            <role-name>AdminRole</role-name>
+        </security-role>
+        <security-role>
+            <role-name>UserRole</role-name>
+        </security-role>
+
+        <!-- Method permission — restrict bulk deactivation to AdminRole -->
+        <method-permission>
+            <role-name>AdminRole</role-name>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>deactivateDepartment</method-name>
+            </method>
+        </method-permission>
+
+        <!-- Allow all authenticated users to read employee data -->
+        <method-permission>
+            <role-name>UserRole</role-name>
+            <role-name>AdminRole</role-name>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getAllEmployees</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getEmployeeById</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getEmployeesByDepartment</method-name>
+            </method>
+        </method-permission>
+
+        <!-- Transaction attributes for EmployeeServiceBean -->
+        <container-transaction>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>createEmployee</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>updateEmployee</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>deactivateEmployee</method-name>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+        </container-transaction>
+
+        <container-transaction>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getAllEmployees</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getEmployeeById</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getEmployeesByDepartment</method-name>
+            </method>
+            <method>
+                <ejb-name>EmployeeServiceBean</ejb-name>
+                <method-name>getDepartmentSalarySummary</method-name>
+            </method>
+            <trans-attribute>NotSupported</trans-attribute>
+        </container-transaction>
+
+        <!-- MDB transaction attribute -->
+        <container-transaction>
+            <method>
+                <ejb-name>EmployeeEventMDB</ejb-name>
+                <method-name>onMessage</method-name>
+            </method>
+            <trans-attribute>Required</trans-attribute>
+        </container-transaction>
+
+    </assembly-descriptor>
+
+</ejb-jar>

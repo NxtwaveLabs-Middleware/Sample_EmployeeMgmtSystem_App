@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0"
+         metadata-complete="false">
+
+    <!--
+    ============================================================
+    web.xml — WebSphere WAR Deployment Descriptor
+    ============================================================
+    metadata-complete="false" allows annotation scanning (@WebServlet,
+    @WebFilter, @WebListener). Set to "true" in performance-critical
+    WAS deployments to skip class scanning at startup.
+    ============================================================
+    -->
+
+    <display-name>Employee Web Module</display-name>
+    <description>
+        JAX-RS REST API for Employee management.
+        Demonstrates WebSphere best practices for web tier.
+    </description>
+
+    <!-- ================================================================
+         Session Configuration
+         ================================================================ -->
+    <session-config>
+        <!--
+            WebSphere HTTP Session timeout.
+            Also configurable in Admin Console:
+              Servers > Application Servers > your_server >
+              Session Management > Maximum waiting threads
+        -->
+        <session-timeout>30</session-timeout>
+        <cookie-config>
+            <http-only>true</http-only>   <!-- Prevents XSS JS access to session cookie -->
+            <secure>true</secure>          <!-- HTTPS-only cookie -->
+            <name>JSESSIONID</name>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+
+    <!-- ================================================================
+         JNDI Resource References
+         Mapped to WebSphere DataSource JNDI via ibm-web-bnd.xml
+         ================================================================ -->
+    <resource-ref>
+        <description>PostgreSQL DataSource (XA)</description>
+        <res-ref-name>jdbc/PostgresDS</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+        <res-sharing-scope>Shareable</res-sharing-scope>
+    </resource-ref>
+
+    <!-- ================================================================
+         Security Constraints — WebSphere integrates with LDAP/RACF/TAM
+         ================================================================ -->
+    <security-constraint>
+        <display-name>Employee API Security</display-name>
+        <web-resource-collection>
+            <web-resource-name>Employee Read</web-resource-name>
+            <url-pattern>/api/employees</url-pattern>
+            <url-pattern>/api/employees/*</url-pattern>
+            <http-method>GET</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>UserRole</role-name>
+            <role-name>AdminRole</role-name>
+        </auth-constraint>
+        <!-- WebSphere SSL — enable transport-guarantee for production -->
+        <!-- <user-data-constraint><transport-guarantee>CONFIDENTIAL</transport-guarantee></user-data-constraint> -->
+    </security-constraint>
+
+    <security-constraint>
+        <display-name>Employee Write Security</display-name>
+        <web-resource-collection>
+            <web-resource-name>Employee Write</web-resource-name>
+            <url-pattern>/api/employees</url-pattern>
+            <url-pattern>/api/employees/*</url-pattern>
+            <http-method>POST</http-method>
+            <http-method>PUT</http-method>
+            <http-method>DELETE</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>AdminRole</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <!--
+            WebSphere supports: BASIC, FORM, CLIENT-CERT
+            In an SSO environment, WebSphere Trust Association Interceptor (TAI)
+            or SPNEGO (Kerberos) handles authentication before this config applies.
+        -->
+        <auth-method>BASIC</auth-method>
+        <realm-name>EmployeeAppRealm</realm-name>
+    </login-config>
+
+    <security-role>
+        <description>Standard employee / read-only user</description>
+        <role-name>UserRole</role-name>
+    </security-role>
+    <security-role>
+        <description>HR Administrator with write access</description>
+        <role-name>AdminRole</role-name>
+    </security-role>
+
+    <!-- ================================================================
+         Error Pages
+         ================================================================ -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/WEB-INF/jsp/error404.jsp</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/WEB-INF/jsp/error500.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Exception</exception-type>
+        <location>/WEB-INF/jsp/error500.jsp</location>
+    </error-page>
+
+    <!-- ================================================================
+         Mime Mappings
+         ================================================================ -->
+    <mime-mapping>
+        <extension>json</extension>
+        <mime-type>application/json</mime-type>
+    </mime-mapping>
+
+</web-app>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application-bnd xmlns="http://websphere.ibm.com/xml/ns/javaee"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://websphere.ibm.com/xml/ns/javaee
+                 http://websphere.ibm.com/xml/ns/javaee/ibm-application-bnd_1_2.xsd"
+                 version="1.2">
+
+    <!--
+    ============================================================
+    IBM WebSphere EAR Binding File (ibm-application-bnd.xml)
+    ============================================================
+    EAR-level security role mappings apply to ALL modules.
+    Module-level bindings in ibm-ejb-jar-bnd.xml / ibm-web-bnd.xml
+    override these for their respective modules.
+
+    WebSphere User Registry types supported:
+      - Local OS
+      - LDAP (Active Directory, IBM Security Directory Server)
+      - Federated Repository (multiple registries merged)
+      - RACF (z/OS)
+    ============================================================
+    -->
+
+    <security-role name="AdminRole">
+        <group name="HR_Administrators"/>
+        <!-- For z/OS: <group name="HRADMIN" access-id="group:defaultWIMFileBasedRealm/HRADMIN"/> -->
+    </security-role>
+
+    <security-role name="UserRole">
+        <!-- All authenticated users get UserRole by default -->
+        <special-subject type="ALL_AUTHENTICATED_USERS"/>
+    </security-role>
+
+</application-bnd>

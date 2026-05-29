@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
+
+    <!--
+    ============================================================
+    WebSphere JPA Persistence Unit — PostgreSQL via JNDI DataSource
+    ============================================================
+
+    Key WebSphere considerations:
+
+    1. JTA DATA SOURCE:
+       - jta-data-source: used inside a JTA transaction (EJB calls).
+       - non-jta-data-source: used outside a JTA transaction (e.g., in
+         @PostConstruct where no TX is active yet, or for schema generation).
+       - Both point to DataSources configured in WebSphere Admin Console:
+           Resources > JDBC > Data Sources
+       - The DataSource must be XA-capable for full 2PC support when used
+         alongside JMS (configure XA JDBC Driver in Admin Console).
+
+    2. JPA PROVIDER:
+       - WebSphere Traditional 8.5/9.x bundles OpenJPA.
+       - WebSphere Liberty bundles EclipseLink (default) or OpenJPA.
+       - Explicitly specify the provider if you need JPA 2.2+ features on
+         Liberty with a specific provider.
+
+    3. SECOND-LEVEL CACHE:
+       - shared-cache-mode = ENABLE_SELECTIVE: only entities annotated with
+         @Cacheable(true) are cached. Suitable for read-heavy reference data.
+       - With WebSphere eXtreme Scale (WXS), configure the JCache provider
+         as the L2 cache provider for distributed caching across cluster nodes.
+       - DISABLE_SELECTIVE is safer in clustered environments unless you
+         control cache invalidation carefully.
+
+    4. VALIDATION MODE:
+       - AUTO: Bean Validation runs on persist/update if the provider is on classpath.
+       - Integrates with WebSphere's JSR-380 Bean Validation provider.
+
+    5. PROPERTIES:
+       - openjpa.* properties are OpenJPA-specific (WAS Traditional).
+       - eclipselink.* properties are EclipseLink-specific (WAS Liberty).
+       - Include only one set matching your WAS version.
+    ============================================================
+    -->
+
+    <persistence-unit name="EmployeePU" transaction-type="JTA">
+
+        <description>Employee HR Persistence Unit — PostgreSQL via WebSphere JNDI</description>
+
+        <!-- JPA provider — Comment out to use WAS default bundled provider -->
+        <!-- <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider> -->
+        <!-- <provider>org.apache.openjpa.persistence.PersistenceProviderImpl</provider> -->
+
+        <!--
+            JNDI name of the XA-capable DataSource configured in WebSphere Admin Console.
+            This maps to the resource-ref in ejb-jar.xml:
+              <resource-ref>
+                <res-ref-name>jdbc/PostgresDS</res-ref-name>
+                <res-type>javax.sql.DataSource</res-type>
+                <res-auth>Container</res-auth>
+                <res-sharing-scope>Shareable</res-sharing-scope>
+              </resource-ref>
+            WebSphere resolves java:comp/env/jdbc/PostgresDS → the bound DataSource.
+        -->
+        <jta-data-source>java:comp/env/jdbc/PostgresDS</jta-data-source>
+        <non-jta-data-source>java:comp/env/jdbc/PostgresDSNoTX</non-jta-data-source>
+
+        <!-- Explicitly list managed entity classes -->
+        <class>com.ibm.websphere.sample.entity.Employee</class>
+
+        <!-- Exclude unlisted classes from other JARs on classpath -->
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+
+        <!--
+            L2 Cache:
+            ENABLE_SELECTIVE = cache only @Cacheable(true) entities.
+            Suitable for mostly-read reference data (departments, etc.).
+        -->
+        <shared-cache-mode>ENABLE_SELECTIVE</shared-cache-mode>
+
+        <validation-mode>AUTO</validation-mode>
+
+        <properties>
+            <!-- ===========================================================
+                 OpenJPA Properties (WebSphere Traditional 8.5.x / 9.x)
+                 =========================================================== -->
+
+            <!-- Schema generation — NEVER use "drop-and-create" in production -->
+            <property name="openjpa.jdbc.SynchronizeMappings"    value="buildSchema(ForeignKeys=true)"/>
+            <!-- SQL dialect for PostgreSQL -->
+            <property name="openjpa.jdbc.DBDictionary"           value="postgres"/>
+            <!-- Statement cache size — aligns with WAS DataSource stmt cache -->
+            <property name="openjpa.jdbc.QuerySQLCache"          value="true(MaxStatementsInCache=100)"/>
+            <!-- Fetch batch size for collections — reduces N+1 round trips -->
+            <property name="openjpa.FetchBatchSize"              value="20"/>
+            <!-- Log SQL in DEV — remove in PROD for performance -->
+            <property name="openjpa.Log"                          value="SQL=WARN,Runtime=INFO,Tool=INFO"/>
+            <!-- Transaction isolation on PostgreSQL (READ_COMMITTED default) -->
+            <property name="openjpa.jdbc.TransactionIsolation"   value="read-committed"/>
+            <!-- Optimistic lock exception on version conflicts -->
+            <property name="openjpa.Optimistic"                  value="true"/>
+
+            <!-- ===========================================================
+                 EclipseLink Properties (WebSphere Liberty / OpenLiberty)
+                 Comment out the OpenJPA block above and enable these for Liberty.
+                 =========================================================== -->
+            <!--
+            <property name="eclipselink.ddl-generation"          value="create-tables"/>
+            <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+            <property name="eclipselink.target-database"         value="PostgreSQL"/>
+            <property name="eclipselink.logging.level"           value="FINE"/>
+            <property name="eclipselink.logging.level.sql"       value="FINE"/>
+            <property name="eclipselink.jdbc.batch-writing"      value="JDBC"/>
+            <property name="eclipselink.jdbc.batch-writing.size" value="100"/>
+            <property name="eclipselink.cache.shared.default"    value="false"/>
+            -->
+
+            <!-- ===========================================================
+                 Standard JPA Properties (provider-agnostic)
+                 =========================================================== -->
+            <!-- Schema generation standard (JPA 2.1+) -->
+            <property name="javax.persistence.schema-generation.database.action" value="none"/>
+        </properties>
+
+    </persistence-unit>
+</persistence>

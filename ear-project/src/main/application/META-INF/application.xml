@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+             http://xmlns.jcp.org/xml/ns/javaee/application_8.xsd"
+             version="8">
+
+    <!--
+    ============================================================
+    application.xml — Java EE 8 EAR Application Descriptor
+    Target: WebSphere Application Server Traditional 9.x
+            WebSphere Liberty 22.x+
+    ============================================================
+    -->
+
+    <display-name>WebSphere-EAR-Employee-Sample</display-name>
+    <description>
+        Enterprise HR Employee Management Application.
+        Demonstrates WebSphere best practices: EJB 3.2, JPA 2.2,
+        JAX-RS 2.1, CDI 2.0, JMS 2.0, JTA, CMT, Security.
+    </description>
+
+    <!-- EJB Module -->
+    <module>
+        <ejb>ejb-module.jar</ejb>
+    </module>
+
+    <!-- Web Module -->
+    <module>
+        <web>
+            <web-uri>employee-web.war</web-uri>
+            <context-root>/employee-web</context-root>
+        </web>
+    </module>
+
+    <!--
+        Security roles declared at EAR level.
+        WebSphere maps these to user registry groups in:
+          Enterprise Applications > your_app > Security role to user/group mapping
+        or via ibm-application-bnd.xml (below)
+    -->
+    <security-role>
+        <description>HR Administrator — full CRUD access</description>
+        <role-name>AdminRole</role-name>
+    </security-role>
+    <security-role>
+        <description>Standard employee — read-only access</description>
+        <role-name>UserRole</role-name>
+    </security-role>
+
+    <!--
+        Library Directory — JARs in this EAR directory are on the class path
+        of ALL modules in the EAR. Place shared-lib.jar and postgresql JDBC driver here.
+        WebSphere loads EAR libraries before module class loaders.
+    -->
+    <library-directory>lib</library-directory>
+
+</application>
